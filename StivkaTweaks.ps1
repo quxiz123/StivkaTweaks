@@ -1644,14 +1644,14 @@ function New-StivkaGUI {
     $form.Font = New-Object System.Drawing.Font("Segoe UI", 9)
     $form.Opacity = 0
 
-    # Animation Timer for fade-in
-    $fadeTimer = New-Object System.Windows.Forms.Timer
-    $fadeTimer.Interval = 20
-    $fadeTimer.Add_Tick({
+    # Animation Timer for fade-in - use script scope
+    $script:fadeTimer = New-Object System.Windows.Forms.Timer
+    $script:fadeTimer.Interval = 20
+    $script:fadeTimer.Add_Tick({
         if ($form.Opacity -lt 1) {
             $form.Opacity += 0.05
         } else {
-            $fadeTimer.Stop()
+            $script:fadeTimer.Stop()
         }
     })
 
@@ -1886,7 +1886,7 @@ function New-StivkaGUI {
     $form.Controls.Add($bottomPanel)
 
     # Start fade-in animation
-    $form.Add_Shown({ $fadeTimer.Start() })
+    $form.Add_Shown({ $script:fadeTimer.Start() })
 
     return $form
 }
