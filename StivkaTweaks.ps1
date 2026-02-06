@@ -16,28 +16,35 @@
 #
 # This script provides a GUI-based Windows optimization tool with 300+ tweaks
 # for maximum gaming performance, minimal input lag, and clean system.
+
 #Requires -Version 5.1
+
 # Check for Admin privileges
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Warning "This script requires Administrator privileges. Restarting with elevated permissions..."
     Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     exit
 }
+
 # Import Windows Forms
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURATION & SETTINGS
 # ═══════════════════════════════════════════════════════════════════════════════
+
 $script:Settings = @{
     CreateRestorePoint = $true
     ShowAdvancedTweaks = $false
     AutoReboot = $false
     LogPath = "$env:TEMP\StivkaTweaks.log"
 }
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # TWEAK DEFINITIONS - 300+ AUTOMATED TWEAKS
 # ═══════════════════════════════════════════════════════════════════════════════
+
 $script:Tweaks = @{
     # ═══════════════════════════ PERFORMANCE ═══════════════════════════
     Performance = @(
@@ -342,6 +349,7 @@ $script:Tweaks = @{
             Risk = "Safe"
         }
     )
+
     # ═══════════════════════════ KEYBOARD ═══════════════════════════
     Keyboard = @(
         @{
@@ -476,6 +484,7 @@ $script:Tweaks = @{
             Risk = "Safe"
         }
     )
+
     # ═══════════════════════════ MOUSE ═══════════════════════════
     Mouse = @(
         @{
@@ -621,6 +630,7 @@ $script:Tweaks = @{
             Risk = "Safe"
         }
     )
+
     # ═══════════════════════════ NVIDIA ═══════════════════════════
     NVIDIA = @(
         @{
@@ -782,6 +792,7 @@ $script:Tweaks = @{
             Risk = "Moderate"
         }
     )
+
     # ═══════════════════════════ NETWORK ═══════════════════════════
     Network = @(
         @{
@@ -963,6 +974,7 @@ $script:Tweaks = @{
             Risk = "Safe"
         }
     )
+
     # ═══════════════════════════ DEBLOAT ═══════════════════════════
     Debloat = @(
         @{
@@ -1189,6 +1201,7 @@ $script:Tweaks = @{
             Risk = "Safe"
         }
     )
+
     # ═══════════════════════════ CONTROLLER ═══════════════════════════
     Controller = @(
         @{
@@ -1318,6 +1331,7 @@ $script:Tweaks = @{
             Risk = "Safe"
         }
     )
+
     # ═══════════════════════════ LATENCY ═══════════════════════════
     Latency = @(
         @{
@@ -1483,6 +1497,7 @@ $script:Tweaks = @{
             Risk = "Safe"
         }
     )
+
     # ═══════════════════════════ MEMORY ═══════════════════════════
     Memory = @(
         @{
@@ -1580,9 +1595,11 @@ $script:Tweaks = @{
         }
     )
 }
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # PROFILE DEFINITIONS
 # ═══════════════════════════════════════════════════════════════════════════════
+
 $script:Profiles = @{
     "Fortnite Pro" = @{
         Description = "Maximale FPS & minimaler Input Delay für Fortnite"
@@ -1609,9 +1626,11 @@ $script:Profiles = @{
         Categories = @("Performance", "Mouse", "Keyboard", "NVIDIA", "Network", "Debloat", "Controller", "Latency", "Memory")
     }
 }
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # GUI CREATION
 # ═══════════════════════════════════════════════════════════════════════════════
+
 function New-StivkaGUI {
     # Form Settings
     $form = New-Object System.Windows.Forms.Form
@@ -1624,6 +1643,7 @@ function New-StivkaGUI {
     $form.MaximizeBox = $false
     $form.Font = New-Object System.Drawing.Font("Segoe UI", 9)
     $form.Opacity = 0
+
     # Animation Timer for fade-in
     $fadeTimer = New-Object System.Windows.Forms.Timer
     $fadeTimer.Interval = 20
@@ -1634,11 +1654,13 @@ function New-StivkaGUI {
             $fadeTimer.Stop()
         }
     })
+
     # Header Panel
     $headerPanel = New-Object System.Windows.Forms.Panel
     $headerPanel.Location = New-Object System.Drawing.Point(0, 0)
     $headerPanel.Size = New-Object System.Drawing.Size(1000, 80)
     $headerPanel.BackColor = [System.Drawing.Color]::FromArgb(15, 15, 15)
+
     $titleLabel = New-Object System.Windows.Forms.Label
     $titleLabel.Text = "⚡ STIVKA TWEAKS"
     $titleLabel.Font = New-Object System.Drawing.Font("Segoe UI", 22, [System.Drawing.FontStyle]::Bold)
@@ -1646,6 +1668,7 @@ function New-StivkaGUI {
     $titleLabel.Location = New-Object System.Drawing.Point(20, 15)
     $titleLabel.AutoSize = $true
     $headerPanel.Controls.Add($titleLabel)
+
     $subtitleLabel = New-Object System.Windows.Forms.Label
     $subtitleLabel.Text = "Premium Windows Optimization Tool - 300+ Automated Tweaks"
     $subtitleLabel.Font = New-Object System.Drawing.Font("Segoe UI", 10)
@@ -1653,12 +1676,15 @@ function New-StivkaGUI {
     $subtitleLabel.Location = New-Object System.Drawing.Point(22, 52)
     $subtitleLabel.AutoSize = $true
     $headerPanel.Controls.Add($subtitleLabel)
+
     $form.Controls.Add($headerPanel)
+
     # Tab Control
     $tabControl = New-Object System.Windows.Forms.TabControl
     $tabControl.Location = New-Object System.Drawing.Point(10, 90)
     $tabControl.Size = New-Object System.Drawing.Size(970, 510)
     $tabControl.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
+
     # Create tabs for each category
     $categories = @("Performance", "Mouse", "Keyboard", "NVIDIA", "Network", "Debloat", "Controller", "Latency", "Memory", "Settings")
     
@@ -1667,12 +1693,14 @@ function New-StivkaGUI {
         $tab.Text = $category
         $tab.BackColor = [System.Drawing.Color]::FromArgb(15, 15, 15)
         $tab.ForeColor = [System.Drawing.Color]::White
+
         if ($category -eq "Settings") {
             # Settings Tab
             $settingsPanel = New-Object System.Windows.Forms.Panel
             $settingsPanel.Location = New-Object System.Drawing.Point(10, 10)
             $settingsPanel.Size = New-Object System.Drawing.Size(940, 450)
             $settingsPanel.BackColor = [System.Drawing.Color]::FromArgb(20, 20, 20)
+
             $cbRestorePoint = New-Object System.Windows.Forms.CheckBox
             $cbRestorePoint.Text = "🛡️ Wiederherstellungspunkt erstellen (Empfohlen)"
             $cbRestorePoint.Location = New-Object System.Drawing.Point(20, 20)
@@ -1681,6 +1709,7 @@ function New-StivkaGUI {
             $cbRestorePoint.Checked = $true
             $cbRestorePoint.Tag = "CreateRestorePoint"
             $settingsPanel.Controls.Add($cbRestorePoint)
+
             $cbAdvanced = New-Object System.Windows.Forms.CheckBox
             $cbAdvanced.Text = "⚠️ Erweiterte Tweaks anzeigen (Spectre/Meltdown deaktivieren etc.)"
             $cbAdvanced.Location = New-Object System.Drawing.Point(20, 60)
@@ -1689,6 +1718,7 @@ function New-StivkaGUI {
             $cbAdvanced.Checked = $false
             $cbAdvanced.Tag = "ShowAdvancedTweaks"
             $settingsPanel.Controls.Add($cbAdvanced)
+
             $cbAutoReboot = New-Object System.Windows.Forms.CheckBox
             $cbAutoReboot.Text = "🔄 Nach Anwendung automatisch neu starten"
             $cbAutoReboot.Location = New-Object System.Drawing.Point(20, 100)
@@ -1697,6 +1727,7 @@ function New-StivkaGUI {
             $cbAutoReboot.Checked = $false
             $cbAutoReboot.Tag = "AutoReboot"
             $settingsPanel.Controls.Add($cbAutoReboot)
+
             # Profile Quick Selection
             $profileLabel = New-Object System.Windows.Forms.Label
             $profileLabel.Text = "🎮 Schnell-Profile:"
@@ -1705,6 +1736,7 @@ function New-StivkaGUI {
             $profileLabel.Font = New-Object System.Drawing.Font("Segoe UI", 11, [System.Drawing.FontStyle]::Bold)
             $profileLabel.ForeColor = [System.Drawing.Color]::White
             $settingsPanel.Controls.Add($profileLabel)
+
             $yPos = 195
             foreach ($profile in $script:Profiles.Keys) {
                 $btn = New-Object System.Windows.Forms.Button
@@ -1732,6 +1764,7 @@ function New-StivkaGUI {
                 
                 $yPos += 45
             }
+
             $tab.Controls.Add($settingsPanel)
         }
         else {
@@ -1747,17 +1780,19 @@ function New-StivkaGUI {
             $listView.BorderStyle = "None"
             $listView.GridLines = $true
             $listView.Tag = $category
-            $listView.Columns.Add("Tweak", 300)
-            $listView.Columns.Add("Beschreibung", 400)
-            $listView.Columns.Add("Impact", 80)
-            $listView.Columns.Add("Risiko", 80)
+
+            $listView.Columns.Add("Tweak", 300) | Out-Null
+            $listView.Columns.Add("Beschreibung", 400) | Out-Null
+            $listView.Columns.Add("Impact", 80) | Out-Null
+            $listView.Columns.Add("Risiko", 80) | Out-Null
+
             # Populate tweaks
             if ($script:Tweaks.ContainsKey($category)) {
                 foreach ($tweak in $script:Tweaks[$category]) {
                     $item = New-Object System.Windows.Forms.ListViewItem($tweak.Name)
-                    $item.SubItems.Add($tweak.Description)
-                    $item.SubItems.Add($tweak.Impact)
-                    $item.SubItems.Add($tweak.Risk)
+                    $item.SubItems.Add($tweak.Description) | Out-Null
+                    $item.SubItems.Add($tweak.Impact) | Out-Null
+                    $item.SubItems.Add($tweak.Risk) | Out-Null
                     $item.Tag = $tweak
                     
                     # Color coding for risk
@@ -1765,19 +1800,24 @@ function New-StivkaGUI {
                         $item.ForeColor = [System.Drawing.Color]::Orange
                     }
                     
-                    $listView.Items.Add($item)
+                    $listView.Items.Add($item) | Out-Null
                 }
             }
+
             $tab.Controls.Add($listView)
         }
+
         $tabControl.TabPages.Add($tab)
     }
+
     $form.Controls.Add($tabControl)
+
     # Bottom Buttons Panel
     $bottomPanel = New-Object System.Windows.Forms.Panel
     $bottomPanel.Location = New-Object System.Drawing.Point(0, 605)
     $bottomPanel.Size = New-Object System.Drawing.Size(1000, 70)
     $bottomPanel.BackColor = [System.Drawing.Color]::FromArgb(15, 15, 15)
+
     # Select All Button
     $selectAllBtn = New-Object System.Windows.Forms.Button
     $selectAllBtn.Text = "☑️ Alle auswählen"
@@ -1798,6 +1838,7 @@ function New-StivkaGUI {
         }
     })
     $bottomPanel.Controls.Add($selectAllBtn)
+
     # Deselect All Button
     $deselectAllBtn = New-Object System.Windows.Forms.Button
     $deselectAllBtn.Text = "☐ Alle abwählen"
@@ -1818,6 +1859,7 @@ function New-StivkaGUI {
         }
     })
     $bottomPanel.Controls.Add($deselectAllBtn)
+
     # Status Label
     $statusLabel = New-Object System.Windows.Forms.Label
     $statusLabel.Text = "Bereit - Wähle Tweaks aus und klicke auf 'Anwenden'"
@@ -1826,6 +1868,7 @@ function New-StivkaGUI {
     $statusLabel.ForeColor = [System.Drawing.Color]::LightGreen
     $statusLabel.Tag = "StatusLabel"
     $bottomPanel.Controls.Add($statusLabel)
+
     # Apply Button
     $applyBtn = New-Object System.Windows.Forms.Button
     $applyBtn.Text = "🚀 TWEAKS ANWENDEN"
@@ -1839,14 +1882,19 @@ function New-StivkaGUI {
         Apply-SelectedTweaks -TabControl $tabControl -StatusLabel $statusLabel
     })
     $bottomPanel.Controls.Add($applyBtn)
+
     $form.Controls.Add($bottomPanel)
+
     # Start fade-in animation
     $form.Add_Shown({ $fadeTimer.Start() })
+
     return $form
 }
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # TWEAK APPLICATION FUNCTIONS
 # ═══════════════════════════════════════════════════════════════════════════════
+
 function Apply-Profile {
     param(
         [string]$ProfileName,
@@ -1855,6 +1903,7 @@ function Apply-Profile {
     
     $profile = $script:Profiles[$ProfileName]
     if (-not $profile) { return }
+
     foreach ($tab in $TabControl.TabPages) {
         foreach ($control in $tab.Controls) {
             if ($control -is [System.Windows.Forms.ListView]) {
@@ -1875,11 +1924,13 @@ function Apply-Profile {
         [System.Windows.Forms.MessageBoxIcon]::Information
     )
 }
+
 function Apply-SelectedTweaks {
     param(
         [System.Windows.Forms.TabControl]$TabControl,
         [System.Windows.Forms.Label]$StatusLabel
     )
+
     $selectedTweaks = @()
     
     foreach ($tab in $TabControl.TabPages) {
@@ -1893,6 +1944,7 @@ function Apply-SelectedTweaks {
             }
         }
     }
+
     if ($selectedTweaks.Count -eq 0) {
         [System.Windows.Forms.MessageBox]::Show(
             "Keine Tweaks ausgewählt!`n`nWähle mindestens einen Tweak aus der Liste.",
@@ -1902,13 +1954,16 @@ function Apply-SelectedTweaks {
         )
         return
     }
+
     $confirm = [System.Windows.Forms.MessageBox]::Show(
         "$($selectedTweaks.Count) Tweaks werden angewendet.`n`nFortfahren?",
         "Bestätigung",
         [System.Windows.Forms.MessageBoxButtons]::YesNo,
         [System.Windows.Forms.MessageBoxIcon]::Question
     )
+
     if ($confirm -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+
     # Create Restore Point
     if ($script:Settings.CreateRestorePoint) {
         $StatusLabel.Text = "Erstelle Wiederherstellungspunkt..."
@@ -1923,12 +1978,15 @@ function Apply-SelectedTweaks {
             Write-Warning "Wiederherstellungspunkt konnte nicht erstellt werden"
         }
     }
+
     # Apply Tweaks
     $applied = 0
     $failed = 0
+
     foreach ($tweak in $selectedTweaks) {
         $StatusLabel.Text = "Wende an: $($tweak.Name)..."
         [System.Windows.Forms.Application]::DoEvents()
+
         try {
             if ($tweak.Type -eq "registry" -and $tweak.Registry) {
                 $regPath = $tweak.Registry.Path
@@ -1956,22 +2014,27 @@ function Apply-SelectedTweaks {
             Write-Warning "Fehler bei: $($tweak.Name) - $($_.Exception.Message)"
         }
     }
+
     # Complete
     $StatusLabel.Text = "✅ Fertig! $applied Tweaks angewendet" + $(if ($failed -gt 0) { ", $failed fehlgeschlagen" } else { "" })
     $StatusLabel.ForeColor = [System.Drawing.Color]::LightGreen
+
     $result = [System.Windows.Forms.MessageBox]::Show(
         "✅ $applied von $($selectedTweaks.Count) Tweaks erfolgreich angewendet!`n`n⚠️ Ein Neustart wird empfohlen für volle Wirkung.`n`nJetzt neu starten?",
         "Tweaks angewendet",
         [System.Windows.Forms.MessageBoxButtons]::YesNo,
         [System.Windows.Forms.MessageBoxIcon]::Information
     )
+
     if ($result -eq [System.Windows.Forms.DialogResult]::Yes) {
         Restart-Computer -Force
     }
 }
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAIN ENTRY POINT
 # ═══════════════════════════════════════════════════════════════════════════════
+
 Write-Host ""
 Write-Host "  ╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
 Write-Host "  ║                                                              ║" -ForegroundColor Cyan
@@ -1989,6 +2052,7 @@ Write-Host "  ╚═════════════════════
 Write-Host ""
 Write-Host "  Starte GUI..." -ForegroundColor Green
 Write-Host ""
+
 # Launch GUI
 $gui = New-StivkaGUI
-[System.Windows.Forms.Application]::Run($gui)
+[void][System.Windows.Forms.Application]::Run($gui)
