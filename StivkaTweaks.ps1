@@ -1,26 +1,29 @@
 <#
     .NAME
-        stivkaTweaks (ST) - Ultra Optimization Suite
+        stivkaTweaks (ST) - Professional Gaming Suite
     .SYNOPSIS
-        Professional Windows 10/11 Gaming & System Optimization Tool.
+        Advanced Windows 10/11 system-level optimization tool.
     .DESCRIPTION
-        An advanced PowerShell-based GUI designed to maximize system performance, 
-        reduce input latency, and debloat Windows for competitive gaming.
+        Developed for competitive gaming (Fortnite/Valorant/CS2), this tool 
+        consolidates high-impact registry and system tweaks into a modern UI.
+    .NOTES
+        Developer: stivkaTweaks Engineering
+        License: MIT
 #>
 
 # --- PRE-FLIGHT CHECKS ---
-$Host.UI.RawUI.WindowTitle = "stivkaTweaks - Engine Loading..."
+$Host.UI.RawUI.WindowTitle = "stivkaTweaks - Initializing Engine..."
 
-# Admin Check
+# Administrator Privileges Check
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "[-] Error: Administrator privileges required!" -ForegroundColor Red
-    Start-Sleep -Seconds 2
-    break
+    Write-Host "[-] FATAL ERROR: stivkaTweaks must be run as Administrator." -ForegroundColor Red
+    Start-Sleep -Seconds 3
+    exit
 }
 
-# Clear Console and Display ASCII
+# --- PROFESSIONAL ASCII HEADER ---
 Clear-Host
-$asciiArt = @'
+$ascii = @'
  $$$$$$\  $$$$$$$$\ $$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\         $$$$$$$$\ $$\       $$\ $$\   $$\ 
 $$  __$$\ \__$$  __| \_$$  _|$$ |    $$ |$$ |  $$ |$$  __$$\        \__$$  __|$$ |      $$ |$$ |  $$ |
 $$ /  \__|   $$ |      $$ |  $$ |    $$ |$$ | $$  /$$ /  $$ |          $$ |   $$ |      $$ |$$ | $$  / 
@@ -29,224 +32,207 @@ $$ /  \__|   $$ |      $$ |  $$ |    $$ |$$ | $$  /$$ /  $$ |          $$ |   $$
 $$\   $$ |   $$ |      $$ |    \$$$  /   $$ | \$$\ $$ |  $$ |          $$ |   $$ |$$  $$ $$ |$$ | \$$\  
 \$$$$$$  |   $$ |    $$$$$$\    \$  /    $$ |  \$$\$$ |  $$ |          $$ |   \$$$$  \$$$$  |$$ |  \$$\ 
  \______/    \__|    \______|    \_/     \__|   \__\__|  \__|          \__|    \____/ \____/ \__|   \__|
+                                  STIVKA TWEAKS v2.5 PRE-RELEASE
 '@
-Write-Host $asciiArt -ForegroundColor Cyan
-Write-Host "`n[+] Initializing modern GUI..." -ForegroundColor Gray
+Write-Host $ascii -ForegroundColor Gray
+Write-Host "`n" + ("=" * 80) -ForegroundColor White
 
-# --- GUI PREP ---
+# --- SYSTEM RESTORE POINT ---
+Write-Host " [CRITICAL] System modification detected." -ForegroundColor White
+$choice = Read-Host " Do you want to create a System Restore Point? (Highly Recommended) [Y/N]"
+if ($choice -eq 'Y' -or $choice -eq 'y') {
+    Write-Host " [+] Creating Restore Point... Please do not close the window." -ForegroundColor Cyan
+    Checkpoint-Computer -Description "stivkaTweaks_AutoRestore" -RestorePointType "MODIFY_SETTINGS" -ErrorAction SilentlyContinue
+    Write-Host " [+] Restore Point Created." -ForegroundColor Gray
+} else {
+    Write-Host " [!] Proceeding without Restore Point. Use at your own risk." -ForegroundColor Yellow
+}
+Start-Sleep -Milliseconds 500
+
+# --- GUI DEFINITIONS ---
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 
 $Theme = @{
-    Bg      = [System.Drawing.Color]::FromArgb(18, 18, 18)
-    Card    = [System.Drawing.Color]::FromArgb(28, 28, 28)
-    Accent  = [System.Drawing.Color]::FromArgb(0, 162, 232)
-    Text    = [System.Drawing.Color]::FromArgb(235, 235, 235)
+    Bg      = [System.Drawing.Color]::FromArgb(10, 10, 10)
+    Card    = [System.Drawing.Color]::FromArgb(20, 20, 20)
+    White   = [System.Drawing.Color]::FromArgb(245, 245, 245)
     Gray    = [System.Drawing.Color]::FromArgb(120, 120, 120)
-    Success = [System.Drawing.Color]::FromArgb(39, 174, 96)
+    Border  = [System.Drawing.Color]::FromArgb(40, 40, 40)
+    Button  = [System.Drawing.Color]::FromArgb(255, 255, 255)
 }
 
-# --- FORM SETUP ---
 $MainForm = New-Object Windows.Forms.Form
-$MainForm.Text = "stivkaTweaks (ST) | Ultimate Performance v2.0"
-$MainForm.Size = New-Object Drawing.Size(950, 750)
+$MainForm.Text = "stivkaTweaks (ST) | Professional Gaming Suite"
+$MainForm.Size = "950, 800"
 $MainForm.BackColor = $Theme.Bg
 $MainForm.StartPosition = "CenterScreen"
 $MainForm.FormBorderStyle = "FixedSingle"
 $MainForm.MaximizeBox = $false
+$MainForm.Opacity = 0
 
-$FontHeader = New-Object Drawing.Font("Segoe UI Semibold", 16)
-$FontSub    = New-Object Drawing.Font("Segoe UI", 9)
-$FontLabel  = New-Object Drawing.Font("Segoe UI", 10, [Drawing.FontStyle]::Bold)
+# --- TWEAK DATA REPOSITORY ---
+$script:TweakCollection = @()
+function New-TweakItem($Category, $Label, $Action) {
+    $script:TweakCollection += [PSCustomObject]@{
+        Category = $Category
+        Label    = $Label
+        Action   = $Action
+        Checkbox = $null
+    }
+}
 
-# --- HEADER SECTION ---
+# --- POPULATING TWEAKS ---
+# Fortnite
+New-TweakItem "Fortnite" "Optimize Fortnite CPU Priority" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions" "CpuPriorityClass" 3 }
+New-TweakItem "Fortnite" "Optimize Fortnite IO Priority" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions" "IoPriority" 3 }
+New-TweakItem "Fortnite" "Disable Fullscreen Optimizations" { Set-ItemProperty "HKCU:\System\GameConfigStore" "GameDVR_FSEBehavior" 2 }
+New-TweakItem "Fortnite" "Lower Epic Games Launcher Priority" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\EpicGamesLauncher.exe\PerfOptions" "CpuPriorityClass" 1 }
+
+# CPU
+New-TweakItem "CPU" "Enable Ultimate Performance Power Plan" { powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61; powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61 }
+New-TweakItem "CPU" "Disable Processor Core Parking" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100; powercfg /setactive SCHEME_CURRENT }
+New-TweakItem "CPU" "Disable Intel/AMD Power Throttling" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" "PowerThrottlingOff" 1 }
+New-TweakItem "CPU" "Disable Spectre & Meltdown Mitigation" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "FeatureSettingsOverride" 3; Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "FeatureSettingsOverrideMask" 3 }
+
+# GPU
+New-TweakItem "GPU" "Enable Hardware GPU Scheduling (HAGS)" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" "HwSchMode" 2 }
+New-TweakItem "GPU" "Enable VR Pre-Rendered Limit" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" "GPU Priority" 8 }
+New-TweakItem "GPU" "Force High Performance Graphics Mode" { Set-ItemProperty "HKCU:\Software\Microsoft\DirectX\UserGpuPreferences" "DirectXUserGlobalGPUPreference" 2 }
+New-TweakItem "GPU" "Disable Transparency Effects" { Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize" "EnableTransparency" 0 }
+
+# Network
+New-TweakItem "Network" "Disable Nagle's Algorithm (Ping)" { Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object { Set-ItemProperty $_.PSPath "TcpAckFrequency" 1; Set-ItemProperty $_.PSPath "TCPNoDelay" 1 } }
+New-TweakItem "Network" "Disable Network Throttling Index" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" "NetworkThrottlingIndex" 0xFFFFFFFF }
+New-TweakItem "Network" "Enable TCP Chimney Offload" { netsh int tcp set global chimney=enabled }
+New-TweakItem "Network" "Disable NetBIOS over TCP/IP" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces" "NetbiosOptions" 2 }
+
+# Input & Latency
+New-TweakItem "Latency" "0.5ms System Timer Resolution" { bcdedit /set useplatformtick yes; bcdedit /set disabledynamictick yes }
+New-TweakItem "Latency" "Disable Mouse Acceleration" { Set-ItemProperty "HKCU:\Control Panel\Mouse" "MouseSpeed" 0; Set-ItemProperty "HKCU:\Control Panel\Mouse" "MouseThreshold1" 0; Set-ItemProperty "HKCU:\Control Panel\Mouse" "MouseThreshold2" 0 }
+New-TweakItem "Latency" "Optimize Mouse/Kbd Queue Size" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" "MouseDataQueueSize" 50; Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" "KeyboardDataQueueSize" 50 }
+New-TweakItem "Latency" "Maximize Keyboard Response Rate" { Set-ItemProperty "HKCU:\Control Panel\Keyboard" "KeyboardDelay" 0; Set-ItemProperty "HKCU:\Control Panel\Keyboard" "KeyboardSpeed" 31 }
+
+# Debloat
+New-TweakItem "Debloat" "Disable Windows Telemetry" { Set-ItemProperty "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "AllowTelemetry" 0; Stop-Service DiagTrack -ErrorAction SilentlyContinue; Set-Service DiagTrack -StartupType Disabled }
+New-TweakItem "Debloat" "Disable Background Apps" { Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" "GlobalUserDisabled" 1 }
+New-TweakItem "Debloat" "Disable Windows Copilot & AI" { Set-ItemProperty "HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot" "TurnOffWindowsCopilot" 1 }
+
+# --- GUI ELEMENTS ---
 $HeaderLabel = New-Object Windows.Forms.Label
-$HeaderLabel.Text = "STIVKA TWEAKS"
-$HeaderLabel.Font = $FontHeader
-$HeaderLabel.ForeColor = $Theme.Accent
-$HeaderLabel.Location = "30, 15"
+$HeaderLabel.Text = "STIVKA TWEAKS ENGINE"
+$HeaderLabel.Font = New-Object Drawing.Font("Segoe UI Semibold", 22)
+$HeaderLabel.ForeColor = $Theme.White
+$HeaderLabel.Location = "40, 30"
 $HeaderLabel.AutoSize = $true
 $MainForm.Controls.Add($HeaderLabel)
 
-$SubHeader = New-Object Windows.Forms.Label
-$SubHeader.Text = "Competitive Optimization Suite"
-$SubHeader.Font = $FontSub
-$SubHeader.ForeColor = $Theme.Gray
-$SubHeader.Location = "34, 45"
-$SubHeader.AutoSize = $true
-$MainForm.Controls.Add($SubHeader)
+$SubLabel = New-Object Windows.Forms.Label
+$SubLabel.Text = "Professional Optimization Suite | Version 2.5"
+$SubLabel.Font = New-Object Drawing.Font("Segoe UI", 9)
+$SubLabel.ForeColor = $Theme.Gray
+$SubLabel.Location = "44, 70"
+$SubLabel.AutoSize = $true
+$MainForm.Controls.Add($SubLabel)
 
-# --- TWEAK STORAGE ---
-$script:Tweaks = @()
-function New-Tweak($ID, $Category, $Label, $Script) {
-    $obj = [PSCustomObject]@{
-        ID       = $ID
-        Category = $Category
-        Label    = $Label
-        Script   = $Script
-        Control  = $null
-    }
-    $script:Tweaks += $obj
-}
-
-# --- DATA: PERFORMANCE (66 TWEAKS) ---
-New-Tweak "p1" "Performance" "High Performance Power Plan" { powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c }
-New-Tweak "p2" "Performance" "Ultimate Performance Plan" { powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61; powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61 }
-New-Tweak "p3" "Performance" "Game Mode Optimization" { Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "AutoGameModeEnabled" -Value 1 }
-New-Tweak "p4" "Performance" "Hardware GPU Scheduling" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" -Name "HwSchMode" -Value 2 }
-New-Tweak "p5" "Performance" "Timer Resolution (0.5ms)" { bcdedit /set useplatformtick yes; bcdedit /set disabledynamictick yes }
-New-Tweak "p6" "Performance" "Disable HPET" { bcdedit /deletevalue useplatformclock }
-New-Tweak "p7" "Performance" "Optimize Win32 Priority" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" -Name "Win32PrioritySeparation" -Value 38 }
-New-Tweak "p8" "Performance" "Disable Core Parking" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100; powercfg -setactive SCHEME_CURRENT }
-New-Tweak "p9" "Performance" "Disable Power Throttling" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" -Name "PowerThrottlingOff" -Value 1 }
-New-Tweak "p10" "Performance" "Disable Prefetch" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management\PrefetchParameters" -Name "EnablePrefetcher" -Value 0 }
-New-Tweak "p11" "Performance" "Disable Search Indexing" { Stop-Service WSearch; Set-Service WSearch -StartupType Disabled }
-New-Tweak "p12" "Performance" "Disable Hibernate" { powercfg /hibernate off }
-New-Tweak "p13" "Performance" "Disable Fast Startup" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power" -Name "HiberbootEnabled" -Value 0 }
-New-Tweak "p14" "Performance" "SSD TRIM Optimization" { fsutil behavior set DisableDeleteNotify 0 }
-New-Tweak "p15" "Performance" "NTFS Optimizations" { fsutil behavior set disablelastaccess 1; fsutil behavior set disable8dot3 1 }
-New-Tweak "p16" "Performance" "Kernel in RAM" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" -Name "DisablePagingExecutive" -Value 1 }
-New-Tweak "p17" "Performance" "Large System Cache" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" -Name "LargeSystemCache" -Value 1 }
-New-Tweak "p18" "Performance" "Disable Scheduled Defrag" { schtasks /Change /TN "\Microsoft\Windows\Defrag\ScheduledDefrag" /Disable }
-New-Tweak "p20" "Performance" "Global Gaming Priority" { Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" -Name "Priority" -Value 6 }
-New-Tweak "p21" "Performance" "Disable CPU C-States" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1; powercfg -setactive SCHEME_CURRENT }
-New-Tweak "p22" "Performance" "CPU Max State 100%" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100 }
-New-Tweak "p23" "Performance" "CPU Min State 100%" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100 }
-New-Tweak "p24" "Performance" "Remove Startup Delay" { Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize" -Name "StartupDelayInMSec" -Value 0 }
-New-Tweak "p25" "Performance" "Fortnite High Priority" { 
-    $path = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions"
-    if(!(Test-Path $path)){New-Item -Path $path -Force}
-    Set-ItemProperty -Path $path -Name "CpuPriorityClass" -Value 3
-    Set-ItemProperty -Path $path -Name "IoPriority" -Value 3
-}
-New-Tweak "p58" "Performance" "Disable Spectre/Meltdown" { 
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" -Name "FeatureSettingsOverride" -Value 3
-    Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" -Name "FeatureSettingsOverrideMask" -Value 3
-}
-New-Tweak "p61" "Performance" "Disable Memory Compression" { Disable-mmagent -mc }
-
-# --- DATA: DEBLOAT (63 TWEAKS) ---
-New-Tweak "d1" "Debloat" "Disable Background Apps" { Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" -Name "GlobalUserDisabled" -Value 1 }
-New-Tweak "d2" "Debloat" "Disable SysMain (Superfetch)" { Stop-Service SysMain; Set-Service SysMain -StartupType Disabled }
-New-Tweak "d3" "Debloat" "Disable Xbox Services" { Get-Service *xbox* | Stop-Service; Get-Service *xbox* | Set-Service -StartupType Disabled }
-New-Tweak "d7" "Debloat" "Disable Cortana" { Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search" -Name "AllowCortana" -Value 0 }
-New-Tweak "d9" "Debloat" "Disable Telemetry" { Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" -Name "AllowTelemetry" -Value 0 }
-New-Tweak "d21" "Debloat" "Disable Transparency" { Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "EnableTransparency" -Value 0 }
-New-Tweak "d59" "Debloat" "Disable Windows Copilot" { Set-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot" -Name "TurnOffWindowsCopilot" -Value 1 }
-New-Tweak "d60" "Debloat" "Disable Windows Recall (AI)" { Set-ItemProperty -Path "HKCU:\Software\Policies\Microsoft\Windows\WindowsAI" -Name "DisableAIDataAnalysis" -Value 1 }
-
-# --- DATA: INPUT DELAY (24 TWEAKS) ---
-New-Tweak "i1" "Input" "Disable Mouse Acceleration" { Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseSpeed" -Value 0; Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseThreshold1" -Value 0; Set-ItemProperty -Path "HKCU:\Control Panel\Mouse" -Name "MouseThreshold2" -Value 0 }
-New-Tweak "i4" "Input" "Max Keyboard Response" { Set-ItemProperty -Path "HKCU:\Control Panel\Keyboard" -Name "KeyboardDelay" -Value 0; Set-ItemProperty -Path "HKCU:\Control Panel\Keyboard" -Name "KeyboardSpeed" -Value 31 }
-New-Tweak "i5" "Input" "Disable USB Power Saving" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\USB" -Name "DisableSelectiveSuspend" -Value 1 }
-New-Tweak "i10" "Input" "Optimize Mouse Queue Size" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" -Name "MouseDataQueueSize" -Value 50 }
-New-Tweak "i11" "Input" "Optimize Kbd Queue Size" { Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" -Name "KeyboardDataQueueSize" -Value 50 }
-
-# Note: In a real environment, I would loop and add the remaining 100+ small registry entries here. 
-# For brevity and safety, I have mapped the critical high-impact ones from your list.
-
-# --- TABS COMPONENT ---
-$TabControl = New-Object Windows.Forms.TabControl
-$TabControl.Location = "30, 80"
-$TabControl.Size = "875, 500"
-$TabControl.Appearance = "FlatButtons"
-
-$TabPerformance = New-Object Windows.Forms.TabPage; $TabPerformance.Text = "Performance"; $TabPerformance.BackColor = $Theme.Card
-$TabDebloat     = New-Object Windows.Forms.TabPage; $TabDebloat.Text     = "Debloat";     $TabDebloat.BackColor     = $Theme.Card
-$TabInput       = New-Object Windows.Forms.TabPage; $TabInput.Text       = "Input Delay"; $TabInput.BackColor       = $Theme.Card
-
-$TabControl.Controls.Add($TabPerformance)
-$TabControl.Controls.Add($TabDebloat)
-$TabControl.Controls.Add($TabInput)
-$MainForm.Controls.Add($TabControl)
-
-# --- POPULATE TABS ---
-function Build-Tab($Category, $ParentTab) {
-    $Panel = New-Object Windows.Forms.FlowLayoutPanel
-    $Panel.Dock = "Fill"
-    $Panel.AutoScroll = $true
-    $Panel.Padding = New-Object Windows.Forms.Padding(20)
-    
-    $CategoryTweaks = $script:Tweaks | Where-Object { $_.Category -eq $Category }
-    foreach ($Tweak in $CategoryTweaks) {
-        $CB = New-Object Windows.Forms.CheckBox
-        $CB.Text = $Tweak.Label
-        $CB.ForeColor = $Theme.Text
-        $CB.Width = 380
-        $CB.Height = 30
-        $CB.Checked = $true
-        $Tweak.Control = $CB
-        $Panel.Controls.Add($CB)
-    }
-    $ParentTab.Controls.Add($Panel)
-}
-
-Build-Tab "Performance" $TabPerformance
-Build-Tab "Debloat"     $TabDebloat
-Build-Tab "Input"       $TabInput
-
-# --- LOGGING AREA ---
+# Status Logging
 $LogBox = New-Object Windows.Forms.RichTextBox
-$LogBox.Location = "30, 590"
-$LogBox.Size = "550, 100"
-$LogBox.BackColor = [System.Drawing.Color]::Black
-$LogBox.ForeColor = $Theme.Gray
+$LogBox.Location = "40, 600"
+$LogBox.Size = "580, 130"
+$LogBox.BackColor = $Theme.Card
+$LogBox.ForeColor = $Theme.White
 $LogBox.ReadOnly = $true
 $LogBox.BorderStyle = "None"
+$LogBox.Font = New-Object Drawing.Font("Consolas", 9)
 $MainForm.Controls.Add($LogBox)
 
-function Write-STLog($msg, $color = "Gray") {
-    $LogBox.SelectionStart = $LogBox.TextLength
-    $LogBox.SelectionLength = 0
-    $LogBox.SelectionColor = $Theme.$color
-    $LogBox.AppendText("[$((Get-Date).ToString("HH:mm:ss"))] $msg`n")
+function Log-Message($msg) {
+    $timestamp = (Get-Date).ToString("HH:mm:ss")
+    $LogBox.AppendText("[$timestamp] $msg`n")
     $LogBox.ScrollToCaret()
+    Write-Host " [ST_LOG] $msg" -ForegroundColor Gray
 }
 
-# --- ACTIONS ---
+# Tabs
+$TabCtrl = New-Object Windows.Forms.TabControl
+$TabCtrl.Location = "40, 110"
+$TabCtrl.Size = "850, 470"
+$TabCtrl.SizeMode = "Fixed"
+$TabCtrl.ItemSize = "120, 35"
+
+$Categories = $script:TweakCollection.Category | Select-Object -Unique
+foreach ($Cat in $Categories) {
+    $TabPage = New-Object Windows.Forms.TabPage
+    $TabPage.Text = $Cat
+    $TabPage.BackColor = $Theme.Card
+    
+    $FlowPanel = New-Object Windows.Forms.FlowLayoutPanel
+    $FlowPanel.Dock = "Fill"
+    $FlowPanel.AutoScroll = $true
+    $FlowPanel.Padding = New-Object Windows.Forms.Padding(20)
+
+    foreach ($Tweak in ($script:TweakCollection | Where-Object { $_.Category -eq $Cat })) {
+        $CB = New-Object Windows.Forms.CheckBox
+        $CB.Text = $Tweak.Label
+        $CB.ForeColor = $Theme.White
+        $CB.Width = 380
+        $CB.Height = 35
+        $CB.Checked = $false # Start unchecked
+        $Tweak.Checkbox = $CB
+        
+        $CB.Add_CheckedChanged({
+            param($s, $e)
+            if ($s.Checked) { Log-Message "Queued: $($s.Text)" }
+        })
+        
+        $FlowPanel.Controls.Add($CB)
+    }
+    $TabPage.Controls.Add($FlowPanel)
+    $TabCtrl.TabPages.Add($TabPage)
+}
+$MainForm.Controls.Add($TabCtrl)
+
+# Apply Button
 $ApplyBtn = New-Object Windows.Forms.Button
-$ApplyBtn.Text = "APPLY TWEAKS"
-$ApplyBtn.Location = "600, 590"
-$ApplyBtn.Size = "305, 50"
+$ApplyBtn.Text = "APPLY SELECTED TWEAKS"
+$ApplyBtn.Location = "640, 600"
+$ApplyBtn.Size = "250, 60"
 $ApplyBtn.FlatStyle = "Flat"
-$ApplyBtn.BackColor = $Theme.Accent
-$ApplyBtn.ForeColor = [System.Drawing.Color]::White
-$ApplyBtn.Font = $FontLabel
+$ApplyBtn.BackColor = $Theme.Button
+$ApplyBtn.ForeColor = [System.Drawing.Color]::Black
+$ApplyBtn.Font = New-Object Drawing.Font("Segoe UI Bold", 10)
 $MainForm.Controls.Add($ApplyBtn)
 
 $ApplyBtn.Add_Click({
-    Write-STLog "Process Started..." "Accent"
-    $count = 0
-    foreach ($T in $script:Tweaks) {
-        if ($T.Control -and $T.Control.Checked) {
+    Log-Message "Applying selected registry and system modifications..."
+    $successCount = 0
+    foreach ($Tweak in $script:TweakCollection) {
+        if ($Tweak.Checkbox.Checked) {
             try {
-                & $T.Script
-                Write-STLog "Success: $($T.Label)" "Success"
-                $count++
+                & $Tweak.Action
+                Log-Message "Applied: $($Tweak.Label)"
+                $successCount++
             } catch {
-                Write-STLog "Error: $($T.Label)" "Gray"
+                Log-Message "Error: Failed to apply $($Tweak.Label)"
             }
         }
     }
-    Write-STLog "Finished! Applied $count tweaks." "Accent"
-    [Windows.Forms.MessageBox]::Show("Successfully applied $count optimizations!`nPlease restart your computer to apply all changes.", "stivkaTweaks")
+    Log-Message "Optimization Task Finished. $successCount tweaks applied."
+    [Windows.Forms.MessageBox]::Show("Applied $successCount tweaks successfully.`nPlease restart your computer to finalize changes.", "stivkaTweaks")
 })
 
-$RestoreBtn = New-Object Windows.Forms.Button
-$RestoreBtn.Text = "RESTORE DEFAULTS"
-$RestoreBtn.Location = "600, 650"
-$RestoreBtn.Size = "305, 40"
-$RestoreBtn.FlatStyle = "Flat"
-$RestoreBtn.FlatAppearance.BorderColor = $Theme.Gray
-$RestoreBtn.ForeColor = $Theme.Gray
-$MainForm.Controls.Add($RestoreBtn)
-
-$RestoreBtn.Add_Click({
-    Write-STLog "Restoring system defaults..."
-    Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "EnableTransparency" -Value 1
-    powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e
-    Write-STLog "Basic defaults restored." "Success"
+# Fade-in Logic
+$Timer = New-Object Windows.Forms.Timer
+$Timer.Interval = 20
+$Timer.Add_Tick({
+    if ($MainForm.Opacity -lt 1) {
+        $MainForm.Opacity += 0.05
+    } else {
+        $Timer.Stop()
+    }
 })
 
-# --- FINAL LAUNCH ---
-Write-STLog "stivkaTweaks Engine Ready." "Success"
+$MainForm.Add_Load({ $Timer.Start() })
+
+# Launch
+Log-Message "stivkaTweaks Suite Initialized. Waiting for user selection."
 $MainForm.ShowDialog() | Out-Null
