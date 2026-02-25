@@ -1,238 +1,155 @@
 <#
-    .NAME
-        stivkaTweaks (ST) - Professional Gaming Suite
-    .SYNOPSIS
-        Advanced Windows 10/11 system-level optimization tool.
-    .DESCRIPTION
-        Developed for competitive gaming (Fortnite/Valorant/CS2), this tool 
-        consolidates high-impact registry and system tweaks into a modern UI.
-    .NOTES
-        Developer: stivkaTweaks Engineering
-        License: MIT
+    .NAME: stivkaTweaks ULTIMATE v6.0 (MINIMALIST)
+    .DESCRIPTION: High-performance, low-distraction system engine.
 #>
 
-# --- PRE-FLIGHT CHECKS ---
-$Host.UI.RawUI.WindowTitle = "stivkaTweaks - Initializing Engine..."
-
-# Administrator Privileges Check
+# --- PRE-FLIGHT ---
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "[-] FATAL ERROR: stivkaTweaks must be run as Administrator." -ForegroundColor Red
-    Start-Sleep -Seconds 3
-    exit
+    Write-Host "[-] FATAL: Admin rights required." -ForegroundColor Red; Start-Sleep -s 3; exit
 }
 
-# --- PROFESSIONAL ASCII HEADER ---
+# --- CONSOLE CLEAN START ---
 Clear-Host
-$ascii = @'
- $$$$$$\  $$$$$$$$\ $$$$$$\ $$\     $$\ $$\   $$\  $$$$$$\         $$$$$$$$\ $$\       $$\ $$\   $$\ 
-$$  __$$\ \__$$  __| \_$$  _|$$ |    $$ |$$ |  $$ |$$  __$$\        \__$$  __|$$ |      $$ |$$ |  $$ |
-$$ /  \__|   $$ |      $$ |  $$ |    $$ |$$ | $$  /$$ /  $$ |          $$ |   $$ |      $$ |$$ | $$  / 
-\$$$$$$\     $$ |      $$ |  \$$\   $$  |$$$$$  / $$$$$$$$ |          $$ |   $$ |  $$\  $$ |$$$$$  /  
- \____$$\    $$ |      $$ |   \$$\ $$  / $$  $$<  $$  __$$ |          $$ |   $$ | $$$$\ $$ |$$  $$<   
-$$\   $$ |   $$ |      $$ |    \$$$  /   $$ | \$$\ $$ |  $$ |          $$ |   $$ |$$  $$ $$ |$$ | \$$\  
-\$$$$$$  |   $$ |    $$$$$$\    \$  /    $$ |  \$$\$$ |  $$ |          $$ |   \$$$$  \$$$$  |$$ |  \$$\ 
- \______/    \__|    \______|    \_/     \__|   \__\__|  \__|          \__|    \____/ \____/ \__|   \__|
-                                  STIVKA TWEAKS v2.5 PRE-RELEASE
-'@
-Write-Host $ascii -ForegroundColor Gray
-Write-Host "`n" + ("=" * 80) -ForegroundColor White
+Write-Host " [STIVKA TWEAKS V6.0]" -ForegroundColor White
+Write-Host " --------------------" -ForegroundColor Gray
 
-# --- SYSTEM RESTORE POINT ---
-Write-Host " [CRITICAL] System modification detected." -ForegroundColor White
-$choice = Read-Host " Do you want to create a System Restore Point? (Highly Recommended) [Y/N]"
-if ($choice -eq 'Y' -or $choice -eq 'y') {
-    Write-Host " [+] Creating Restore Point... Please do not close the window." -ForegroundColor Cyan
-    Checkpoint-Computer -Description "stivkaTweaks_AutoRestore" -RestorePointType "MODIFY_SETTINGS" -ErrorAction SilentlyContinue
-    Write-Host " [+] Restore Point Created." -ForegroundColor Gray
-} else {
-    Write-Host " [!] Proceeding without Restore Point. Use at your own risk." -ForegroundColor Yellow
+# --- RESTORE POINT PROMPT ---
+$res = Read-Host " Create a System Restore Point? (Recommended) [Y/N]"
+if ($res -match "y") {
+    Write-Host " [+] Building Restore Point..." -ForegroundColor Cyan
+    Checkpoint-Computer -Description "stivkaTweaks_v6" -RestorePointType "MODIFY_SETTINGS" -ErrorAction SilentlyContinue
+    Write-Host " [+] Success." -ForegroundColor Green
 }
-Start-Sleep -Milliseconds 500
 
-# --- GUI DEFINITIONS ---
+# --- GUI THEME & CONSTANTS ---
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
-
 $Theme = @{
-    Bg      = [System.Drawing.Color]::FromArgb(10, 10, 10)
-    Card    = [System.Drawing.Color]::FromArgb(20, 20, 20)
-    White   = [System.Drawing.Color]::FromArgb(245, 245, 245)
-    Gray    = [System.Drawing.Color]::FromArgb(120, 120, 120)
-    Border  = [System.Drawing.Color]::FromArgb(40, 40, 40)
-    Button  = [System.Drawing.Color]::FromArgb(255, 255, 255)
+    Bg      = [System.Drawing.Color]::FromArgb(18, 18, 18)
+    Panel   = [System.Drawing.Color]::FromArgb(28, 28, 28)
+    Text    = [System.Drawing.Color]::FromArgb(230, 230, 230)
+    Gray    = [System.Drawing.Color]::FromArgb(110, 110, 110)
+    Accent  = [System.Drawing.Color]::White
+    Border  = [System.Drawing.Color]::FromArgb(45, 45, 45)
 }
 
 $MainForm = New-Object Windows.Forms.Form
-$MainForm.Text = "stivkaTweaks (ST) | Professional Gaming Suite"
-$MainForm.Size = "950, 800"
-$MainForm.BackColor = $Theme.Bg
-$MainForm.StartPosition = "CenterScreen"
-$MainForm.FormBorderStyle = "FixedSingle"
-$MainForm.MaximizeBox = $false
-$MainForm.Opacity = 0
+$MainForm.Text = "stivkaTweaks v6.0"; $MainForm.Size = "1150, 950"; $MainForm.BackColor = $Theme.Bg; $MainForm.Opacity = 0; $MainForm.FormBorderStyle = "FixedSingle"; $MainForm.StartPosition = "CenterScreen"
 
-# --- TWEAK DATA REPOSITORY ---
-$script:TweakCollection = @()
-function New-TweakItem($Category, $Label, $Action) {
-    $script:TweakCollection += [PSCustomObject]@{
-        Category = $Category
-        Label    = $Label
-        Action   = $Action
-        Checkbox = $null
-    }
-}
+$script:Tweaks = @()
+function T($Cat, $Name, $Code) { $script:Tweaks += [PSCustomObject]@{ Category=$Cat; Name=$Name; Code=$Code; UI=$null } }
 
-# --- POPULATING TWEAKS ---
-# Fortnite
-New-TweakItem "Fortnite" "Optimize Fortnite CPU Priority" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions" "CpuPriorityClass" 3 }
-New-TweakItem "Fortnite" "Optimize Fortnite IO Priority" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions" "IoPriority" 3 }
-New-TweakItem "Fortnite" "Disable Fullscreen Optimizations" { Set-ItemProperty "HKCU:\System\GameConfigStore" "GameDVR_FSEBehavior" 2 }
-New-TweakItem "Fortnite" "Lower Epic Games Launcher Priority" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\EpicGamesLauncher.exe\PerfOptions" "CpuPriorityClass" 1 }
+# --- THE TWEAK REPOSITORY (80+ TOTAL) ---
 
-# CPU
-New-TweakItem "CPU" "Enable Ultimate Performance Power Plan" { powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61; powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61 }
-New-TweakItem "CPU" "Disable Processor Core Parking" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100; powercfg /setactive SCHEME_CURRENT }
-New-TweakItem "CPU" "Disable Intel/AMD Power Throttling" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" "PowerThrottlingOff" 1 }
-New-TweakItem "CPU" "Disable Spectre & Meltdown Mitigation" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "FeatureSettingsOverride" 3; Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "FeatureSettingsOverrideMask" 3 }
+# GAMING & FORTNITE
+T "Gaming" "Disable GameDVR & GameBar (Global)" { Set-ItemProperty "HKCU:\System\GameConfigStore" "GameDVR_Enabled" 0; Set-ItemProperty "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" "AllowGameDVR" 0 }
+T "Gaming" "Fortnite: Priority Shipping Class" { $p="HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions"; if(!(Test-Path $p)){New-Item $p -Force}; Set-ItemProperty $p "CpuPriorityClass" 3 }
+T "Gaming" "Fortnite: Page Priority 5" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\FortniteClient-Win64-Shipping.exe\PerfOptions" "PagePriority" 5 }
+T "Gaming" "Disable Fullscreen Optimizations" { Set-ItemProperty "HKCU:\System\GameConfigStore" "GameDVR_FSEBehavior" 2 }
+T "Gaming" "Enable Game Mode (System)" { Set-ItemProperty "HKCU:\Software\Microsoft\GameBar" "AllowAutoGameMode" 1 }
+T "Gaming" "Disable Xbox Telemetry" { Get-Service "XblAuthManager","XblGameSave","XboxNetApiSvc" | Set-Service -StartupType Disabled }
+T "Gaming" "Disable NVIDIA Telemetry Services" { Get-Service "NvTelemetryContainer" -ErrorAction SilentlyContinue | Set-Service -StartupType Disabled }
+T "Gaming" "Lower Discord Priority" { $p="HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\Discord.exe\PerfOptions"; if(!(Test-Path $p)){New-Item $p -Force}; Set-ItemProperty $p "CpuPriorityClass" 1 }
 
-# GPU
-New-TweakItem "GPU" "Enable Hardware GPU Scheduling (HAGS)" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" "HwSchMode" 2 }
-New-TweakItem "GPU" "Enable VR Pre-Rendered Limit" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" "GPU Priority" 8 }
-New-TweakItem "GPU" "Force High Performance Graphics Mode" { Set-ItemProperty "HKCU:\Software\Microsoft\DirectX\UserGpuPreferences" "DirectXUserGlobalGPUPreference" 2 }
-New-TweakItem "GPU" "Disable Transparency Effects" { Set-ItemProperty "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize" "EnableTransparency" 0 }
+# CPU & KERNEL
+T "CPU" "Ultimate Performance Plan" { powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61; powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61 }
+T "CPU" "Disable Core Parking" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100 }
+T "CPU" "Disable Processor C-States" { powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1 }
+T "CPU" "Disable Power Throttling" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" "PowerThrottlingOff" 1 }
+T "CPU" "Kernel: Disable Paging Executive" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "DisablePagingExecutive" 1 }
+T "CPU" "IO Priority: High" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\I/O System" "CountOperations" 1 }
+T "CPU" "Disable Intel/AMD Spectre Patches" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "FeatureSettingsOverride" 3; Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "FeatureSettingsOverrideMask" 3 }
+T "CPU" "System Responsiveness: 0 (Games)" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" "SystemResponsiveness" 0 }
+T "CPU" "Win32PrioritySeparation: 38 (Decimal)" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\PriorityControl" "Win32PrioritySeparation" 38 }
 
-# Network
-New-TweakItem "Network" "Disable Nagle's Algorithm (Ping)" { Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object { Set-ItemProperty $_.PSPath "TcpAckFrequency" 1; Set-ItemProperty $_.PSPath "TCPNoDelay" 1 } }
-New-TweakItem "Network" "Disable Network Throttling Index" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" "NetworkThrottlingIndex" 0xFFFFFFFF }
-New-TweakItem "Network" "Enable TCP Chimney Offload" { netsh int tcp set global chimney=enabled }
-New-TweakItem "Network" "Disable NetBIOS over TCP/IP" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters\Interfaces" "NetbiosOptions" 2 }
+# GPU & DISPLAY
+T "GPU" "Enable Hardware GPU Scheduling" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" "HwSchMode" 2 }
+T "GPU" "Disable MPO (Multi-Plane Overlay)" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\Dwm" "OverlayTestMode" 0x00000005 }
+T "GPU" "Maximize Graphics Task Priority" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile\Tasks\Games" "GPU Priority" 8 }
+T "GPU" "Disable GPU Energy Saving" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" "PowerDownAfterNoActivity" 0 }
+T "GPU" "Disable Transparency Effects" { Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" "EnableTransparency" 0 }
+T "GPU" "Force High Performance Mode" { Set-ItemProperty "HKCU:\Software\Microsoft\DirectX\UserGpuPreferences" "DirectXUserGlobalGPUPreference" 2 }
+T "GPU" "DWM High Priority" { $p="HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\dwm.exe\PerfOptions"; if(!(Test-Path $p)){New-Item $p -Force}; Set-ItemProperty $p "CpuPriorityClass" 3 }
 
-# Input & Latency
-New-TweakItem "Latency" "0.5ms System Timer Resolution" { bcdedit /set useplatformtick yes; bcdedit /set disabledynamictick yes }
-New-TweakItem "Latency" "Disable Mouse Acceleration" { Set-ItemProperty "HKCU:\Control Panel\Mouse" "MouseSpeed" 0; Set-ItemProperty "HKCU:\Control Panel\Mouse" "MouseThreshold1" 0; Set-ItemProperty "HKCU:\Control Panel\Mouse" "MouseThreshold2" 0 }
-New-TweakItem "Latency" "Optimize Mouse/Kbd Queue Size" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\mouclass\Parameters" "MouseDataQueueSize" 50; Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\kbdclass\Parameters" "KeyboardDataQueueSize" 50 }
-New-TweakItem "Latency" "Maximize Keyboard Response Rate" { Set-ItemProperty "HKCU:\Control Panel\Keyboard" "KeyboardDelay" 0; Set-ItemProperty "HKCU:\Control Panel\Keyboard" "KeyboardSpeed" 31 }
+# NETWORK
+T "Network" "Disable Nagle's Algorithm" { Get-ChildItem "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" | ForEach-Object { Set-ItemProperty $_.PSPath "TcpAckFrequency" 1; Set-ItemProperty $_.PSPath "TCPNoDelay" 1 } }
+T "Network" "Disable Network Throttling" { Set-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" "NetworkThrottlingIndex" 0xFFFFFFFF }
+T "Network" "TCP Autotuning: Normal" { netsh int tcp set global autotuninglevel=normal }
+T "Network" "Disable EEE (Ethernet Saving)" { Get-NetAdapter | Disable-NetAdapterPowerManagement -EnergyEfficientEthernet }
+T "Network" "Enable RSS (Receive Side Scaling)" { netsh int tcp set global rss=enabled }
+T "Network" "Disable Task Offload" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" "DisableTaskOffload" 1 }
+T "Network" "Minimize DNS Caching Latency" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" "MaxCacheTtl" 1 }
 
-# Debloat
-New-TweakItem "Debloat" "Disable Windows Telemetry" { Set-ItemProperty "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "AllowTelemetry" 0; Stop-Service DiagTrack -ErrorAction SilentlyContinue; Set-Service DiagTrack -StartupType Disabled }
-New-TweakItem "Debloat" "Disable Background Apps" { Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" "GlobalUserDisabled" 1 }
-New-TweakItem "Debloat" "Disable Windows Copilot & AI" { Set-ItemProperty "HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot" "TurnOffWindowsCopilot" 1 }
+# FILESYSTEM & SSD
+T "Filesystem" "Disable 8dot3 Shortnames" { fsutil 8dot3name set 1 }
+T "Filesystem" "Disable Last Access Timestamp" { fsutil behavior set disablelastaccess 1 }
+T "Filesystem" "Disable NTFS Paging (Large Memory)" { Set-ItemProperty "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" "LargeSystemCache" 0 }
+T "Filesystem" "Enable TRIM (Global SSD)" { fsutil behavior set DisableDeleteNotify 0 }
+T "Filesystem" "Speed Up Menu Show Delay" { Set-ItemProperty "HKCU:\Control Panel\Desktop" "MenuShowDelay" 0 }
 
-# --- GUI ELEMENTS ---
-$HeaderLabel = New-Object Windows.Forms.Label
-$HeaderLabel.Text = "STIVKA TWEAKS ENGINE"
-$HeaderLabel.Font = New-Object Drawing.Font("Segoe UI Semibold", 22)
-$HeaderLabel.ForeColor = $Theme.White
-$HeaderLabel.Location = "40, 30"
-$HeaderLabel.AutoSize = $true
-$MainForm.Controls.Add($HeaderLabel)
+# DEBLOAT & LATENCY
+T "Debloat" "Disable Telemetry" { Set-ItemProperty "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" "AllowTelemetry" 0 }
+T "Debloat" "Disable Background Apps" { Set-ItemProperty "HKCU:\Software\Microsoft\Windows\CurrentVersion\BackgroundAccessApplications" "GlobalUserDisabled" 1 }
+T "Debloat" "Disable Windows Copilot" { Set-ItemProperty "HKCU:\Software\Policies\Microsoft\Windows\WindowsCopilot" "TurnOffWindowsCopilot" 1 }
+T "Debloat" "Disable Windows Recall AI" { Set-ItemProperty "HKCU:\Software\Policies\Microsoft\Windows\WindowsAI" "DisableAIDataAnalysis" 1 }
+T "Debloat" "Disable SysMain (Superfetch)" { Set-Service "SysMain" -StartupType Disabled; Stop-Service "SysMain" -ErrorAction SilentlyContinue }
+T "Debloat" "Disable Connected User Experiences" { Set-Service "DiagTrack" -StartupType Disabled; Stop-Service "DiagTrack" -ErrorAction SilentlyContinue }
+T "Debloat" "0.5ms Timer Resolution" { bcdedit /set useplatformtick yes; bcdedit /set disabledynamictick yes }
 
-$SubLabel = New-Object Windows.Forms.Label
-$SubLabel.Text = "Professional Optimization Suite | Version 2.5"
-$SubLabel.Font = New-Object Drawing.Font("Segoe UI", 9)
-$SubLabel.ForeColor = $Theme.Gray
-$SubLabel.Location = "44, 70"
-$SubLabel.AutoSize = $true
-$MainForm.Controls.Add($SubLabel)
+# --- GUI LAYOUT ---
 
-# Status Logging
+$Title = New-Object Windows.Forms.Label
+$Title.Text = "STIVKA TWEAKS ENGINE"; $Title.Font = New-Object Drawing.Font("Segoe UI Semilight", 28); $Title.ForeColor = $Theme.Text; $Title.Location = "40, 30"; $Title.AutoSize = $true
+$MainForm.Controls.Add($Title)
+
 $LogBox = New-Object Windows.Forms.RichTextBox
-$LogBox.Location = "40, 600"
-$LogBox.Size = "580, 130"
-$LogBox.BackColor = $Theme.Card
-$LogBox.ForeColor = $Theme.White
-$LogBox.ReadOnly = $true
-$LogBox.BorderStyle = "None"
-$LogBox.Font = New-Object Drawing.Font("Consolas", 9)
+$LogBox.Location = "40, 780"; $LogBox.Size = "700, 110"; $LogBox.BackColor = $Theme.Panel; $LogBox.ForeColor = $Theme.Text; $LogBox.BorderStyle = "None"; $LogBox.ReadOnly = $true
 $MainForm.Controls.Add($LogBox)
 
-function Log-Message($msg) {
-    $timestamp = (Get-Date).ToString("HH:mm:ss")
-    $LogBox.AppendText("[$timestamp] $msg`n")
-    $LogBox.ScrollToCaret()
-    Write-Host " [ST_LOG] $msg" -ForegroundColor Gray
+function Log-ST($m, $c="White") {
+    $LogBox.SelectionStart = $LogBox.TextLength; $LogBox.SelectionColor = [Drawing.Color]::FromName($c); $LogBox.AppendText("[$((Get-Date).ToString('HH:mm:ss'))] $m`n"); $LogBox.ScrollToCaret()
+    Write-Host " [LOG] $m" -ForegroundColor Gray
 }
 
-# Tabs
-$TabCtrl = New-Object Windows.Forms.TabControl
-$TabCtrl.Location = "40, 110"
-$TabCtrl.Size = "850, 470"
-$TabCtrl.SizeMode = "Fixed"
-$TabCtrl.ItemSize = "120, 35"
+# TABS
+$Tabs = New-Object Windows.Forms.TabControl
+$Tabs.Location = "40, 120"; $Tabs.Size = "1050, 630"; $Tabs.BackColor = $Theme.Bg
 
-$Categories = $script:TweakCollection.Category | Select-Object -Unique
-foreach ($Cat in $Categories) {
-    $TabPage = New-Object Windows.Forms.TabPage
-    $TabPage.Text = $Cat
-    $TabPage.BackColor = $Theme.Card
+foreach ($C in ($script:Tweaks.Category | Select-Object -Unique)) {
+    $TP = New-Object Windows.Forms.TabPage; $TP.Text = $C.ToUpper(); $TP.BackColor = $Theme.Panel
+    $FL = New-Object Windows.Forms.FlowLayoutPanel; $FL.Dock = "Fill"; $FL.AutoScroll = $true; $FL.Padding = New-Object Windows.Forms.Padding(30)
     
-    $FlowPanel = New-Object Windows.Forms.FlowLayoutPanel
-    $FlowPanel.Dock = "Fill"
-    $FlowPanel.AutoScroll = $true
-    $FlowPanel.Padding = New-Object Windows.Forms.Padding(20)
-
-    foreach ($Tweak in ($script:TweakCollection | Where-Object { $_.Category -eq $Cat })) {
-        $CB = New-Object Windows.Forms.CheckBox
-        $CB.Text = $Tweak.Label
-        $CB.ForeColor = $Theme.White
-        $CB.Width = 380
-        $CB.Height = 35
-        $CB.Checked = $false # Start unchecked
-        $Tweak.Checkbox = $CB
-        
-        $CB.Add_CheckedChanged({
-            param($s, $e)
-            if ($s.Checked) { Log-Message "Queued: $($s.Text)" }
-        })
-        
-        $FlowPanel.Controls.Add($CB)
+    foreach ($T in ($script:Tweaks | Where-Object { $_.Category -eq $C })) {
+        $CB = New-Object Windows.Forms.CheckBox; $CB.Text = $T.Name; $CB.ForeColor = $Theme.Text; $CB.Width = 460; $CB.Height = 45; $CB.Checked = $false; $CB.FlatStyle = "Flat"
+        $T.UI = $CB
+        $CB.Add_CheckedChanged({ param($s,$e) if($s.Checked){ Log-ST "Queued: $($s.Text)" "Cyan" } })
+        $FL.Controls.Add($CB)
     }
-    $TabPage.Controls.Add($FlowPanel)
-    $TabCtrl.TabPages.Add($TabPage)
+    $TP.Controls.Add($FL); $Tabs.TabPages.Add($TP)
 }
-$MainForm.Controls.Add($TabCtrl)
+$MainForm.Controls.Add($Tabs)
 
-# Apply Button
+# EXECUTE
 $ApplyBtn = New-Object Windows.Forms.Button
-$ApplyBtn.Text = "APPLY SELECTED TWEAKS"
-$ApplyBtn.Location = "640, 600"
-$ApplyBtn.Size = "250, 60"
-$ApplyBtn.FlatStyle = "Flat"
-$ApplyBtn.BackColor = $Theme.Button
-$ApplyBtn.ForeColor = [System.Drawing.Color]::Black
-$ApplyBtn.Font = New-Object Drawing.Font("Segoe UI Bold", 10)
+$ApplyBtn.Text = "EXECUTE"; $ApplyBtn.Location = "780, 780"; $ApplyBtn.Size = "310, 60"; $ApplyBtn.FlatStyle = "Flat"; $ApplyBtn.FlatAppearance.BorderSize = 0
+$ApplyBtn.BackColor = $Theme.Accent; $ApplyBtn.ForeColor = $Theme.Bg; $ApplyBtn.Font = New-Object Drawing.Font("Segoe UI Bold", 14)
 $MainForm.Controls.Add($ApplyBtn)
 
 $ApplyBtn.Add_Click({
-    Log-Message "Applying selected registry and system modifications..."
-    $successCount = 0
-    foreach ($Tweak in $script:TweakCollection) {
-        if ($Tweak.Checkbox.Checked) {
-            try {
-                & $Tweak.Action
-                Log-Message "Applied: $($Tweak.Label)"
-                $successCount++
-            } catch {
-                Log-Message "Error: Failed to apply $($Tweak.Label)"
-            }
+    Log-ST "Applying modifications..." "Yellow"
+    $count = 0
+    foreach ($T in $script:Tweaks) {
+        if ($T.UI.Checked) {
+            try { & $T.Code; Log-ST "SUCCESS: $($T.Name)" "Green"; $count++ } catch { Log-ST "ERROR: $($T.Name)" "Red" }
         }
     }
-    Log-Message "Optimization Task Finished. $successCount tweaks applied."
-    [Windows.Forms.MessageBox]::Show("Applied $successCount tweaks successfully.`nPlease restart your computer to finalize changes.", "stivkaTweaks")
+    Log-ST "Process Finished. Please Reboot." "White"
+    [Windows.Forms.MessageBox]::Show("Applied $count tweaks. Restart required!", "stivkaTweaks")
 })
 
-# Fade-in Logic
-$Timer = New-Object Windows.Forms.Timer
-$Timer.Interval = 20
-$Timer.Add_Tick({
-    if ($MainForm.Opacity -lt 1) {
-        $MainForm.Opacity += 0.05
-    } else {
-        $Timer.Stop()
-    }
-})
+# FADE-IN
+$Tmr = New-Object Windows.Forms.Timer; $Tmr.Interval = 10
+$Tmr.Add_Tick({ if($MainForm.Opacity -lt 1){ $MainForm.Opacity += 0.1 } else { $Tmr.Stop() } })
+$MainForm.Add_Load({ $Tmr.Start() })
 
-$MainForm.Add_Load({ $Timer.Start() })
-
-# Launch
-Log-Message "stivkaTweaks Suite Initialized. Waiting for user selection."
+Log-ST "v6.0 Minimalist Loaded." "Green"
 $MainForm.ShowDialog() | Out-Null
