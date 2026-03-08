@@ -1,70 +1,55 @@
 # =================================================================================
-# CS2 Windows Optimization Script (Safe & Legit)
-# Version: 1.0 | Fokus: Input-Lag & Frametimes
+# CS2 System Restore Script - Zurücksetzen auf Windows-Standardwerte
 # =================================================================================
 
-Write-Host "Starte CS2 System-Optimierung..." -ForegroundColor Cyan
+Write-Host "Setze System-Einstellungen auf Standard zurück..." -ForegroundColor Cyan
 
-# 1. Systemwiederherstellungspunkt erstellen (Sicherheit geht vor!)
-Write-Host "[1/7] Erstelle Wiederherstellungspunkt..." -ForegroundColor Yellow
-Checkpoint-Computer -Description "Vor CS2 Optimierung" -RestorePointType "MODIFY_SETTINGS"
+# 1. Power Plan auf 'Ausbalanciert' (Balanced) zurückstellen
+Write-Host "[1/6] Setze Energiesparplan auf 'Ausbalanciert'..." -ForegroundColor Yellow
+powercfg -setactive 381b4222-f694-41f0-9685-ff5bb260df2e
 
-# 2. Power Plan: Ultimate Performance aktivieren
-# Dies schaltet CPU-Parking aus und hält den Takt stabil.
-Write-Host "[2/7] Aktiviere 'Ultimate Performance' Power Plan..." -ForegroundColor Yellow
-powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
-$ultimatePlan = powercfg -list | Select-String "Ultimate Performance"
-if ($ultimatePlan) {
-    $guid = $ultimatePlan.ToString().Split()[3]
-    powercfg -setactive $guid
-}
-
-# 3. Windows Gaming Features
-# Game Mode sollte AN sein (priorisiert CPU-Zyklen für Spiele).
-# Game Bar sollte AUS sein (verursacht Overlay-Lag).
-Write-Host "[3/7] Konfiguriere Gaming-Features..." -ForegroundColor Yellow
+# 2. Windows Gaming Features wieder aktivieren
+Write-Host "[2/6] Aktiviere Game Bar und Standard-Gaming-Settings..." -ForegroundColor Yellow
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\GameBar" -Name "AllowAutoGameMode" -Value 1
-Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Value 0
-Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Value 0
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR" -Name "AppCaptureEnabled" -Value 1
+Set-ItemProperty -Path "HKCU:\System\GameConfigStore" -Name "GameDVR_Enabled" -Value 1
 
-# 4. Netzwerk-Optimierung (TCP Latency)
-# Reduziert das 'Queuing' von Paketen für schnellere Response-Zeiten.
-Write-Host "[4/7] Optimiere Netzwerk-Latency..." -ForegroundColor Yellow
+# 3. Netzwerk-Optimierung (TCP Standardwerte)
+Write-Host "[3/6] Setze Netzwerk-Stack auf Windows-Standard zurück..." -ForegroundColor Yellow
 netsh int tcp set global autotuninglevel=normal
-netsh int tcp set global chimney=enabled
-netsh int tcp set global dca=enabled
-netsh int tcp set global netdma=enabled
+netsh int tcp set global chimney=default
+netsh int tcp set global dca=disabled
+netsh int tcp set global netdma=default
 netsh int tcp set global ecncapability=disabled
 netsh int tcp set global timestamps=disabled
 
-# Nagle's Algorithmus deaktivieren (Registry)
+# Nagle's Algorithmus Registry-Einträge entfernen
 $interfaces = "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces"
 Get-ChildItem $interfaces | ForEach-Object {
-    Set-ItemProperty -Path $_.PSPath -Name "TcpAckFrequency" -Value 1 -ErrorAction SilentlyContinue
-    Set-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -Value 1 -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path $_.PSPath -Name "TcpAckFrequency" -ErrorAction SilentlyContinue
+    Remove-ItemProperty -Path $_.PSPath -Name "TCPNoDelay" -ErrorAction SilentlyContinue
 }
 
-# 5. System Responsiveness & Timer Resolution
-# Setzt die Priorität für Games im Scheduler höher.
-Write-Host "[5/7] Optimiere System-Responsiveness..." -ForegroundColor Yellow
+# 4. System Responsiveness & Scheduler Defaults
+Write-Host "[4/6] Setze Multimedia-Scheduler-Profile zurück..." -ForegroundColor Yellow
 $registryPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile"
-Set-ItemProperty -Path $registryPath -Name "NetworkThrottlingIndex" -Value 0xFFFFFFFF
-Set-ItemProperty -Path $registryPath -Name "SystemResponsiveness" -Value 0
+Set-ItemProperty -Path $registryPath -Name "NetworkThrottlingIndex" -Value 10
+Set-ItemProperty -Path $registryPath -Name "SystemResponsiveness" -Value 20
 
-# 6. Dienste-Cleanup
-# Stoppt Dienste, die während des Gamings oft für Spikes sorgen.
-Write-Host "[6/7] Deaktiviere unnötige Hintergrunddienste..." -ForegroundColor Yellow
-$services = @("SysMain", "DiagTrack", "RemoteRegistry") # SysMain = Superfetch
+# 5. Dienste wieder aktivieren
+Write-Host "[5/6] Reaktiviere Hintergrunddienste..." -ForegroundColor Yellow
+$services = @("SysMain", "DiagTrack", "RemoteRegistry")
 foreach ($service in $services) {
     if (Get-Service $service -ErrorAction SilentlyContinue) {
-        Stop-Service $service -Force -ErrorAction SilentlyContinue
-        Set-Service $service -StartupType Disabled
+        Set-Service $service -StartupType Automatic
+        Start-Service $service -ErrorAction SilentlyContinue
     }
 }
 
-# 7. System Cleanup
-Write-Host "[7/7] Lösche temporäre Dateien..." -ForegroundColor Yellow
-Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "C:\Windows\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
+# 6. DNS-Cache und Netzwerk-Flush (für frische Verbindung)
+Write-Host "[6/6] Bereinige Netzwerk-Cache..." -ForegroundColor Yellow
+ipconfig /release
+ipconfig /renew
+ipconfig /flushdns
 
-Write-Host "Optimierung abgeschlossen! Bitte starte deinen PC neu." -ForegroundColor Green
+Write-Host "Wiederherstellung abgeschlossen! Bitte starte deinen PC neu." -ForegroundColor Green
